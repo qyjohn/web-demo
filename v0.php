@@ -37,7 +37,7 @@ function process_logout()
 $server = $_SERVER['REMOTE_ADDR'];
 ?>
 
-<?
+<?php
 /*
  *
  * The second part handles user interface.
