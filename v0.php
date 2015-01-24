@@ -15,7 +15,7 @@ if (isset($_POST['username']))
 	process_login($username);
 }
 
-if (isset($_GET['logout'])
+if (isset($_GET['logout']))
 {
 	// This is a logout request
 	process_logout();
