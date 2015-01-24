@@ -7,6 +7,7 @@
 
 
 session_start();
+include('db.php');
 
 if (isset($_POST['username'])) 
 {
@@ -46,11 +47,11 @@ $server = $_SERVER['REMOTE_ADDR'];
 
 if (isset($_SESSION['username']))
 {
-	echo "<H1>$server</H1>";
+	echo '<H1>$server</H1><HR>';
 }
 else
 {
-	echo "<H1>$server</H1>";
+	echo '<H1>$server</H1><HR>';
 }
 
 ?>
