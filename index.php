@@ -5,11 +5,11 @@
  *
  */
 
-
+include("config.php");
 session_start();
 $server   = $_SERVER['REMOTE_ADDR'];
 $username = $_SESSION['username'];
-$db = open_db_connection();
+$db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
 
 if (isset($_POST['username'])) 
@@ -29,7 +29,17 @@ if (isset($_GET['logout']))
 if (isset($_FILES["fileToUpload"]))
 {
 	// This is a upload request, save the file first
-	process_upload($_FILES["fileToUpload"]);
+	if ($storage_option == "disk")
+	{
+		// In config.php, we specify the storage option as "disk"
+		save_upload_to_disk($_FILES["fileToUpload"]);
+	}
+	else if ($storage_option == "s3")
+	{
+		// In config.php, we specify the storage option as "S3"
+		save_upload_to_s3($_FILES["fileToUpload"]);
+	}
+
 	// Then write a record to the database
 	$filename = $_FILES["fileToUpload"]["name"];
 	add_upload_info($db, $username, $filename);
@@ -49,7 +59,7 @@ function process_logout()
 	session_destroy();
 }
 
-function process_upload($uploadedFile)
+function save_upload_to_disk($uploadedFile)
 {
 	// Copy the uploaded file to "uploads" folder
 	$filename = $uploadedFile["name"];
@@ -57,13 +67,16 @@ function process_upload($uploadedFile)
 	move_uploaded_file($uploadedFile["tmp_name"], $tgtFile);
 }
 
-function open_db_connection()
+function save_upload_to_s3($uploadedFile)
+{
+	// Upload the uploaded file to S3 bucket
+	$filename = $uploadedFile["name"];
+}
+
+
+function open_db_connection($hostname, $database, $username, $password)
 {
 	// Open a connection to the database
-	$hostname = 'localhost';
-	$database = 'web_demo';
-	$username = 'username';
-	$password = 'password';
 	$db = new PDO("mysql:host=$hostname;dbname=$database;charset=utf8", $username, $password);
 	return $db;
 }
