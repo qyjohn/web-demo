@@ -32,12 +32,12 @@ if (isset($_FILES["fileToUpload"]))
 	if ($storage_option == "disk")
 	{
 		// In config.php, we specify the storage option as "disk"
-		save_upload_to_disk($_FILES["fileToUpload"]);
+		save_upload_to_disk($_FILES["fileToUpload"], $hd_folder);
 	}
 	else if ($storage_option == "s3")
 	{
 		// In config.php, we specify the storage option as "S3"
-		save_upload_to_s3($_FILES["fileToUpload"]);
+		save_upload_to_s3($_FILES["fileToUpload"], $s3_bucket);
 	}
 
 	// Then write a record to the database
@@ -59,18 +59,25 @@ function process_logout()
 	session_destroy();
 }
 
-function save_upload_to_disk($uploadedFile)
+function save_upload_to_disk($uploadedFile, $folder)
 {
 	// Copy the uploaded file to "uploads" folder
 	$filename = $uploadedFile["name"];
-	$tgtFile  = "uploads/".$filename;	
+	$tgtFile  = $folder."/".$filename;	
 	move_uploaded_file($uploadedFile["tmp_name"], $tgtFile);
 }
 
-function save_upload_to_s3($uploadedFile)
+function save_upload_to_s3($uploadedFile, $bucket)
 {
 	// Upload the uploaded file to S3 bucket
-	$filename = $uploadedFile["name"];
+	$keyname = $uploadedFile["name"];
+	$s3 = S3Client::factory();
+	$s3->putObject(array(
+		'Bucket'       => $bucket,
+		'Key'          => $keyname,
+		'SourceFile'   => $uploadedFile["tmp_name"],
+		'ACL'          => 'public-read'
+	));
 }
 
 
@@ -92,7 +99,7 @@ function add_upload_info($db, $username, $filename)
 function retrieve_recent_uploads($db, $count)
 {
 	// Geting the latest records from the upload_images table
-	$sql = "SELECT * FROM upload_images ORDER BY timeline LIMIT $count";
+	$sql = "SELECT * FROM upload_images ORDER BY timeline DESC LIMIT $count";
 	$statement = $db->prepare($sql);
 	$statement->execute();
 	$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -119,7 +126,7 @@ if (isset($_SESSION['username']))
 		echo "<td><H1>$server</H1></td>";
 		echo "<td align='right'>";
 			echo "$username<br>";
-			echo "<a href='v0.php?logout=yes'>Logout</a>";
+			echo "<a href='index.php?logout=yes'>Logout</a>";
 		echo "</td>";
 	echo "</tr>";
 	echo "</table>";
@@ -127,7 +134,7 @@ if (isset($_SESSION['username']))
 
 	echo "In this crappy demo, we assume that you are uploading images files with file extensions such as JPG, JPEG, GIF, PNG.<br>&nbsp;<br>";
 
-	echo "<form action='v0.php' method='post' enctype='multipart/form-data'>";
+	echo "<form action='index.php' method='post' enctype='multipart/form-data'>";
 	echo "<input type='file' name='fileToUpload' id='fileToUpload'>";
 	echo "<input type='submit' value='Upload Image' name='submit'>";
 	echo "</form>";
@@ -140,7 +147,7 @@ else
 	echo "<tr>";
 		echo "<td><H1>$server</H1></td>";
 		echo "<td align='right'>";
-			echo "<form action='v0.php' method='post'>";
+			echo "<form action='index.php' method='post'>";
 			echo "Enter Your Name: <br>";
 			echo "<input type='text' id='username' name ='username' size=20><br>";
 			echo "<input type='submit' value='login'/>";
