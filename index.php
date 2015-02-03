@@ -7,7 +7,7 @@
 
 include("config.php");
 session_start();
-$server   = $_SERVER['REMOTE_ADDR'];
+$server   = $_SERVER['SERVER_ADDR'];
 $username = $_SESSION['username'];
 $db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
@@ -29,7 +29,7 @@ if (isset($_GET['logout']))
 if (isset($_FILES["fileToUpload"]))
 {
 	// This is a upload request, save the file first
-	if ($storage_option == "disk")
+	if ($storage_option == "hd")
 	{
 		// In config.php, we specify the storage option as "disk"
 		save_upload_to_disk($_FILES["fileToUpload"], $hd_folder);
@@ -160,11 +160,16 @@ else
 
 // Display the images
 echo "<br>&nbsp;<br>";
-foreach ($images as $image)
+if ($storage_option == "hd")
 {
 	$filename = $image["filename"];
 	$url = "uploads/".$filename;
 	echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
 }
-
+else if ($storage_option == "s3")
+{
+	$filename = $image["filename"];
+	$url = $s3_baseurl.$s3_bucket."/".$filename;
+	echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
+}
 ?>
