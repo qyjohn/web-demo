@@ -21,4 +21,8 @@ if ($storage_option == "s3")
 
 // Simulate latency, in seconds
 $latency = 0;
+
+// Cache configuration
+$enable_cache = false;
+$cache_server = "[your-elasticache-instance]";
 ?>

@@ -45,6 +45,13 @@ if (isset($_FILES["fileToUpload"]))
 	// Then write a record to the database
 	$filename = $_FILES["fileToUpload"]["name"];
 	add_upload_info($db, $username, $filename);
+
+	if ($enable_cache)
+	{
+		// Delete the cached record, the user will query the database to 
+		// get an updated version
+		$mem = open_memcache_connection($cache_server);
+	}
 }
 
 
@@ -114,6 +121,15 @@ function retrieve_recent_uploads($db, $count)
 	return $rows;
 }
 
+function open_memcache_connection($hostname)
+{	
+	// Open a connection to the memcache server
+	$mem = new Memcached($hostname, 11211);
+	return $mem;
+}
+
+
+
 ?>
 
 <?php
@@ -163,14 +179,31 @@ else
 	echo "<HR>";
 }
 
-// This statement get the last 10 records from the database
-$images = retrieve_recent_uploads($db, 10);
+// Get the most recent N images
+if ($enable_cache)
+{
+	// Attemp to get the cached records for the front page
+	$mem = open_memcache_connection($cache_server);
+	$images = $mem->get("front_page");
+	if (empty($images))
+	{
+		// If there is no such cached record, get it from the database
+		$images = retrieve_recent_uploads($db, 10);
+		// Then put the record into cache
+		$mem->set("front_page", $images, time()+86400);
+	}
+}
+else
+{
+	// This statement get the last 10 records from the database
+	$images = retrieve_recent_uploads($db, 10);
+}
 
 // Display the images
-
 echo "<br>&nbsp;<br>";
 if ($storage_option == "hd")
 {
+	// Images are on hard disk
 	foreach ($images as $image)
 	{
 		$filename = $image["filename"];
@@ -180,6 +213,7 @@ if ($storage_option == "hd")
 }
 else if ($storage_option == "s3")
 {
+	// Images are on S3
 	foreach ($images as $image)
 	{
 		$filename = $image["filename"];
