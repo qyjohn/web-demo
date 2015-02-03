@@ -113,6 +113,9 @@ function add_upload_info($db, $username, $filename)
 
 function retrieve_recent_uploads($db, $count)
 {
+	// Print a message so that the user knows these records come from the DB.
+	echo "Getting latest $count records from database.<br>";
+
 	// Geting the latest records from the upload_images table
 	$sql = "SELECT * FROM upload_images ORDER BY timeline DESC LIMIT $count";
 	$statement = $db->prepare($sql);
