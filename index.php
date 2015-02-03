@@ -158,7 +158,7 @@ if (isset($_SESSION['username']))
 	echo "</table>";
 	echo "<HR>";
 
-	echo "In this crappy demo, we assume that you are uploading images files with file extensions such as JPG, JPEG, GIF, PNG.<br>&nbsp;<br>";
+	echo "In this demo, we assume that you are uploading images files with file extensions such as JPG, JPEG, GIF, PNG.<br>&nbsp;<br>";
 
 	echo "<form action='index.php' method='post' enctype='multipart/form-data'>";
 	echo "<input type='file' name='fileToUpload' id='fileToUpload'>";
