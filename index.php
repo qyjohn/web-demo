@@ -33,7 +33,7 @@ if (isset($_FILES["fileToUpload"]))
 	// This is a upload request, save the file first
 	if ($storage_option == "hd")
 	{
-		// In config.php, we specify the storage option as "disk"
+		// In config.php, we specify the storage option as "hd"
 		save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
 	}
 	else if ($storage_option == "s3")
@@ -114,9 +114,6 @@ function retrieve_recent_uploads($db, $count)
 	return $rows;
 }
 
-// This statement get the last 10 records from the database
-$images = retrieve_recent_uploads($db, 10);
-
 ?>
 
 <?php
@@ -166,9 +163,12 @@ else
 	echo "<HR>";
 }
 
-// Display the images
-echo "<br>&nbsp;<br>";
+// This statement get the last 10 records from the database
+$images = retrieve_recent_uploads($db, 10);
 
+// Display the images
+
+echo "<br>&nbsp;<br>";
 if ($storage_option == "hd")
 {
 	foreach ($images as $image)
