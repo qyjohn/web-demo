@@ -14,4 +14,11 @@ $storage_option = "hd";
 $hd_folder  = "uploads";
 $s3_bucket  = "my_uploads_bucket";
 $s3_baseurl = "https://s3-ap-southeast-2.amazonaws.com/";
+if ($storage_option == "s3")
+{
+	$s3_client = S3Client::factory();
+}
+
+// Simulate latency, in seconds
+$latency = 0;
 ?>

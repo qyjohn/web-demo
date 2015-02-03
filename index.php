@@ -11,6 +11,8 @@ $server   = $_SERVER['SERVER_ADDR'];
 $username = $_SESSION['username'];
 $db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
+// Simulate latency 
+sleep($latency);
 
 if (isset($_POST['username'])) 
 {
@@ -32,12 +34,12 @@ if (isset($_FILES["fileToUpload"]))
 	if ($storage_option == "hd")
 	{
 		// In config.php, we specify the storage option as "disk"
-		save_upload_to_disk($_FILES["fileToUpload"], $hd_folder);
+		save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
 	}
 	else if ($storage_option == "s3")
 	{
 		// In config.php, we specify the storage option as "S3"
-		save_upload_to_s3($_FILES["fileToUpload"], $s3_bucket);
+		save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
 	}
 
 	// Then write a record to the database
@@ -59,7 +61,7 @@ function process_logout()
 	session_destroy();
 }
 
-function save_upload_to_disk($uploadedFile, $folder)
+function save_upload_to_hd($uploadedFile, $folder)
 {
 	// Copy the uploaded file to "uploads" folder
 	$filename = $uploadedFile["name"];
@@ -67,17 +69,23 @@ function save_upload_to_disk($uploadedFile, $folder)
 	move_uploaded_file($uploadedFile["tmp_name"], $tgtFile);
 }
 
-function save_upload_to_s3($uploadedFile, $bucket)
+function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
 {
-	// Upload the uploaded file to S3 bucket
-	$keyname = $uploadedFile["name"];
-	$s3 = S3Client::factory();
-	$s3->putObject(array(
-		'Bucket'       => $bucket,
-		'Key'          => $keyname,
-		'SourceFile'   => $uploadedFile["tmp_name"],
-		'ACL'          => 'public-read'
-	));
+	try 
+	{
+		// Upload the uploaded file to S3 bucket
+		$key = $uploadedFile["name"];
+		$s3_client->putObject(array(
+			'Bucket' => $s3_bucket,
+			'Key'    => $key,
+			'SourceFile' => $uploadedFile["tmp_name"],
+			'ACL'    => 'public-read'
+	    ));
+	} catch (S3Exception $e) 
+	{
+		echo "There was an error uploading the file.\n";
+		return false;
+	}	
 }
 
 
@@ -160,16 +168,23 @@ else
 
 // Display the images
 echo "<br>&nbsp;<br>";
+
 if ($storage_option == "hd")
 {
-	$filename = $image["filename"];
-	$url = "uploads/".$filename;
-	echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
+	foreach ($images as $image)
+	{
+		$filename = $image["filename"];
+		$url = "uploads/".$filename;
+		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
+	}
 }
 else if ($storage_option == "s3")
 {
-	$filename = $image["filename"];
-	$url = $s3_baseurl.$s3_bucket."/".$filename;
-	echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
+	foreach ($images as $image)
+	{
+		$filename = $image["filename"];
+		$url = $s3_baseurl.$s3_bucket."/".$filename;
+		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
+	}
 }
 ?>
