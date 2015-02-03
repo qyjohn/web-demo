@@ -51,6 +51,7 @@ if (isset($_FILES["fileToUpload"]))
 		// Delete the cached record, the user will query the database to 
 		// get an updated version
 		$mem = open_memcache_connection($cache_server);
+		$mem->delete("front_page");
 	}
 }
 
@@ -127,7 +128,8 @@ function retrieve_recent_uploads($db, $count)
 function open_memcache_connection($hostname)
 {	
 	// Open a connection to the memcache server
-	$mem = new Memcached($hostname, 11211);
+	$mem = new Memcached();
+	$mem->addServer($hostname, 11211);
 	return $mem;
 }
 
@@ -188,7 +190,7 @@ if ($enable_cache)
 	// Attemp to get the cached records for the front page
 	$mem = open_memcache_connection($cache_server);
 	$images = $mem->get("front_page");
-	if (empty($images))
+	if (!$images)
 	{
 		// If there is no such cached record, get it from the database
 		$images = retrieve_recent_uploads($db, 10);
