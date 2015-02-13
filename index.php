@@ -30,28 +30,38 @@ if (isset($_GET['logout']))
 
 if (isset($_FILES["fileToUpload"]))
 {
-	// This is a upload request, save the file first
-	if ($storage_option == "hd")
+	// Check file type before processing
+	$file_temp = "/tmp/".basename($_FILES["fileToUpload"]["name"]);
+	$file_type = pathinfo($file_temp, PATHINFO_EXTENSION);
+	if(($file_type != "jpg") && ($file_type != "png") && ($file_type != "jpeg") && ($file_type != "gif") ) 
 	{
-		// In config.php, we specify the storage option as "hd"
-		save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
+		// Not an image file, ignore the upload request
 	}
-	else if ($storage_option == "s3")
+	else
 	{
-		// In config.php, we specify the storage option as "S3"
-		save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
-	}
+		// This is an image upload request, save the file first
+		if ($storage_option == "hd")
+		{
+			// In config.php, we specify the storage option as "hd"
+			save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
+		}
+		else if ($storage_option == "s3")
+		{
+			// In config.php, we specify the storage option as "S3"
+			save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
+		}
 
-	// Then write a record to the database
-	$filename = $_FILES["fileToUpload"]["name"];
-	add_upload_info($db, $username, $filename);
+		// Then write a record to the database
+		$filename = $_FILES["fileToUpload"]["name"];
+		add_upload_info($db, $username, $filename);
 
-	if ($enable_cache)
-	{
-		// Delete the cached record, the user will query the database to 
-		// get an updated version
-		$mem = open_memcache_connection($cache_server);
-		$mem->delete("front_page");
+		if ($enable_cache)
+		{
+			// Delete the cached record, the user will query the database to 
+			// get an updated version
+			$mem = open_memcache_connection($cache_server);
+			$mem->delete("front_page");
+		}
 	}
 }
 
@@ -143,6 +153,13 @@ function open_memcache_connection($hostname)
  * The second part handles user interface.
  *
  */
+echo "<html>";
+echo "<head>";
+echo "<META http-equiv='Content-Type' content='text/html; charset=UTF-8'>";
+echo "<title>Scalable Web Application</title>";
+echo "<script src='demo.js'></script>";
+echo "</head>";
+echo "<body>";
 
 if (isset($_SESSION['username']))
 {
@@ -161,8 +178,8 @@ if (isset($_SESSION['username']))
 	echo "In this demo, we assume that you are uploading images files with file extensions such as JPG, JPEG, GIF, PNG.<br>&nbsp;<br>";
 
 	echo "<form action='index.php' method='post' enctype='multipart/form-data'>";
-	echo "<input type='file' name='fileToUpload' id='fileToUpload'>";
-	echo "<input type='submit' value='Upload Image' name='submit'>";
+	echo "<input type='file' id='fileToUpload' name='fileToUpload' id='fileToUpload' onchange='check_file_type();'>";
+	echo "<input type='submit' value='Upload Image' id='submit_button' name='submit_button' disabled>";
 	echo "</form>";
 
 }
@@ -226,4 +243,6 @@ else if ($storage_option == "s3")
 		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
 	}
 }
+echo "</body>";
+echo "</html>";
 ?>
