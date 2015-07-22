@@ -32,7 +32,7 @@ if (isset($_FILES["fileToUpload"]))
 {
 	// Check file type before processing
 	$file_temp = "/tmp/".basename($_FILES["fileToUpload"]["name"]);
-	$file_type = pathinfo($file_temp, PATHINFO_EXTENSION);
+	$file_type = strtolower(pathinfo($file_temp, PATHINFO_EXTENSION));
 	if(($file_type != "jpg") && ($file_type != "png") && ($file_type != "jpeg") && ($file_type != "gif") ) 
 	{
 		// Not an image file, ignore the upload request
