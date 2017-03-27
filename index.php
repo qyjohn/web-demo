@@ -253,6 +253,9 @@ else if ($storage_option == "s3")
 		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
 	}
 }
+$session_id = session_id();
+echo "<hr>";
+echo $session_id;
 echo "</body>";
 echo "</html>";
 ?>
