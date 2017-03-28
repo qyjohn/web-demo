@@ -43,17 +43,15 @@ if (isset($_FILES["fileToUpload"]))
 		if ($storage_option == "hd")
 		{
 			// In config.php, we specify the storage option as "hd"
-			save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
+			$key = save_upload_to_hd($_FILES["fileToUpload"], $hd_folder);
+			add_upload_info($db, $username, $key);
 		}
 		else if ($storage_option == "s3")
 		{
 			// In config.php, we specify the storage option as "S3"
-			save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
+			$key = save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
+			add_upload_info($db, $username, $key);
 		}
-
-		// Then write a record to the database
-		$filename = $_FILES["fileToUpload"]["name"];
-		add_upload_info($db, $username, $filename);
 
 		if ($enable_cache)
 		{
@@ -92,9 +90,13 @@ function process_logout()
 function save_upload_to_hd($uploadedFile, $folder)
 {
 	// Copy the uploaded file to "uploads" folder
-	$filename = $uploadedFile["name"];
-	$tgtFile  = $folder."/".$filename;	
-	move_uploaded_file($uploadedFile["tmp_name"], $tgtFile);
+	$ext = pathinfo($uploadedFile["name"], PATHINFO_EXTENSION);
+	$uuid = uniqid();
+	$key = $uuid.".".$ext;
+
+	$tgtFile  = $folder."/".$key;	
+	move_uploaded_file($uploadedFile["tmp_name"], $key);
+	return $key;
 }
 
 function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
@@ -102,7 +104,10 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
 	try 
 	{
 		// Upload the uploaded file to S3 bucket
-		$key = $uploadedFile["name"];
+		$ext = pathinfo($uploadedFile["name"], PATHINFO_EXTENSION);
+		$uuid = uniqid();
+		$key = $uuid.".".$ext;
+
 		$s3_client->putObject(array(
 			'Bucket' => $s3_bucket,
 			'Key'    => $key,
@@ -114,6 +119,8 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
 		echo "There was an error uploading the file.\n";
 		return false;
 	}	
+
+	return $key;
 }
 
 
