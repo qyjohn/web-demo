@@ -17,8 +17,6 @@ if (isset($_POST['username']))
 {
 	// This is a login request
 	process_login($_POST['username']);
-	// Get the new username
-	$username = $_SESSION['username'];
 }
 
 if (isset($_GET['logout']))
