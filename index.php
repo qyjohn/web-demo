@@ -8,7 +8,6 @@
 include("config.php");
 session_start();
 $server   = $_SERVER['SERVER_ADDR'];
-$username = $_SESSION['username'];
 $db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
 // Simulate latency 
@@ -28,7 +27,7 @@ if (isset($_GET['logout']))
 	process_logout();
 }
 
-if (isset($_FILES["fileToUpload"]))
+if (isset($_FILES["fileToUpload"]) && isset($_SESSION['username']))
 {
 	// Check file type before processing
 	$file_temp = "/tmp/".basename($_FILES["fileToUpload"]["name"]);
@@ -39,6 +38,7 @@ if (isset($_FILES["fileToUpload"]))
 	}
 	else
 	{
+		$username = $_SESSION['username'];
 		// This is an image upload request, save the file first
 		if ($storage_option == "hd")
 		{
@@ -89,11 +89,12 @@ function process_logout()
 
 function save_upload_to_hd($uploadedFile, $folder)
 {
-	// Copy the uploaded file to "uploads" folder
+	// Rename the target file with a UUID
 	$ext = pathinfo($uploadedFile["name"], PATHINFO_EXTENSION);
 	$uuid = uniqid();
 	$key = $uuid.".".$ext;
 
+	// Copy the upload file to the target file
 	$tgtFile  = $folder."/".$key;	
 	move_uploaded_file($uploadedFile["tmp_name"], $key);
 	return $key;
@@ -103,11 +104,12 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
 {
 	try 
 	{
-		// Upload the uploaded file to S3 bucket
+		// Rename the target file with a UUID
 		$ext = pathinfo($uploadedFile["name"], PATHINFO_EXTENSION);
 		$uuid = uniqid();
 		$key = $uuid.".".$ext;
 
+		// Upload the uploaded file to S3 bucket
 		$s3_client->putObject(array(
 			'Bucket' => $s3_bucket,
 			'Key'    => $key,
@@ -180,6 +182,7 @@ echo "<body>";
 
 if (isset($_SESSION['username']))
 {
+	$username = $_SESSION['username'];
 	// This section is shown when user is login
 	echo "<table width=100% border=0>";
 	echo "<tr>";
@@ -262,7 +265,7 @@ else if ($storage_option == "s3")
 }
 $session_id = session_id();
 echo "<hr>";
-echo $session_id;
+echo "Session ID: ".$session_id;
 echo "</body>";
 echo "</html>";
 ?>
