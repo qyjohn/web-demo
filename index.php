@@ -94,7 +94,7 @@ function save_upload_to_hd($uploadedFile, $folder)
 
 	// Copy the upload file to the target file
 	$tgtFile  = $folder."/".$key;	
-	move_uploaded_file($uploadedFile["tmp_name"], $key);
+	move_uploaded_file($uploadedFile["tmp_name"], $tgtFile);
 	return $key;
 }
 
