@@ -17,7 +17,7 @@ $s3_bucket  = "my-upload-bucket";
 $s3_baseurl = "https://s3-ap-southeast-2.amazonaws.com/";
 if ($storage_option == "s3")
 {
-	$s3_client = S3Client::factory(array('region' => $s3_region));
+	$s3_client = S3Client::factory(array('region' => $s3_region, 'version' => 'latest'));
 }
 
 // Simulate latency, in seconds
