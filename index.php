@@ -8,7 +8,6 @@
 include("config.php");
 session_start();
 $server   = $_SERVER['SERVER_ADDR'];
-$db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
 // Simulate latency 
 sleep($latency);
@@ -47,16 +46,21 @@ if (isset($_FILES["fileToUpload"]) && isset($_SESSION['username']))
 		else if ($storage_option == "s3")
 		{
 			// In config.php, we specify the storage option as "S3"
-			$key = save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket);
+			$key = save_upload_to_s3($s3_client, $_FILES["fileToUpload"], $s3_bucket, $s3_prefix);
 			add_upload_info($db, $username, $key);
 		}
 
 		if ($enable_cache)
 		{
-			// Delete the cached record, the user will query the database to 
-			// get an updated version
-			$mem = open_memcache_connection($cache_server);
-			$mem->delete("front_page");
+			// Delete the cached record, the user will query the database to get an updated version
+			if ($cache_type == "memcached")
+			{
+				$cache->delete($cache_key);
+			}
+			else if ($cache_type == "redis")
+			{
+				$cache->del($cache_key);
+			}
 		}
 	}
 }
@@ -98,14 +102,21 @@ function save_upload_to_hd($uploadedFile, $folder)
 	return $key;
 }
 
-function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
+function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket, $s3_prefix)
 {
 	try 
 	{
 		// Rename the target file with a UUID
 		$ext = pathinfo($uploadedFile["name"], PATHINFO_EXTENSION);
 		$uuid = uniqid();
-		$key = $uuid.".".$ext;
+		if (empty($s3_prefix))
+		{
+			$key = $uuid.".".$ext;		
+		}
+		else
+		{
+			$key = $s3_prefix."/".$uuid.".".$ext;		
+		}
 
 		// Upload the uploaded file to S3 bucket
 		$s3_client->putObject(array(
@@ -124,12 +135,7 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket)
 }
 
 
-function open_db_connection($hostname, $database, $username, $password)
-{
-	// Open a connection to the database
-	$db = new PDO("mysql:host=$hostname;dbname=$database;charset=utf8", $username, $password);
-	return $db;
-}
+
 
 function add_upload_info($db, $username, $filename)
 {
@@ -148,16 +154,34 @@ function retrieve_recent_uploads($db, $count)
 	$sql = "SELECT * FROM upload_images ORDER BY timeline DESC LIMIT $count";
 	$statement = $db->prepare($sql);
 	$statement->execute();
-	$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-	return $rows;
+	$images = $statement->fetchAll(PDO::FETCH_ASSOC);
+	return $images;
 }
 
-function open_memcache_connection($hostname)
-{	
-	// Open a connection to the memcache server
-	$mem = new Memcached();
-	$mem->addServer($hostname, 11211);
-	return $mem;
+function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl)
+{
+	$html = "\n";
+	if ($storage_option == "hd")
+	{
+	        // Images are on hard disk
+        	foreach ($images as $image)
+        	{
+                	$filename = $image["filename"];
+                	$url = $hd_folder."/".$filename;
+               	 	$html = $html."<img src='$url' width=200px height=150px>\n";
+        	}
+	}
+	else if ($storage_option == "s3")
+	{
+        	// Images are on S3
+        	foreach ($images as $image)
+        	{
+                	$filename = $image["filename"];
+	                $url = $s3_baseurl.$s3_bucket."/".$filename;	                	
+                	$html = $html. "<img src='$url' width=200px height=150px>\n";
+        	}
+	}
+	return $html;	
 }
 
 
@@ -170,13 +194,13 @@ function open_memcache_connection($hostname)
  * The second part handles user interface.
  *
  */
-echo "<html>";
-echo "<head>";
-echo "<META http-equiv='Content-Type' content='text/html; charset=UTF-8'>";
-echo "<title>Scalable Web Application</title>";
-echo "<script src='demo.js'></script>";
-echo "</head>";
-echo "<body>";
+echo "<html>\n";
+echo "<head>\n";
+echo "<META http-equiv='Content-Type' content='text/html; charset=UTF-8'>\n";
+echo "<title>Scalable Web Application</title>\n";
+echo "<script src='demo.js'></script>\n";
+echo "</head>\n";
+echo "<body>\n";
 
 if (isset($_SESSION['username']))
 {
@@ -204,66 +228,48 @@ if (isset($_SESSION['username']))
 else
 {
 	// This section is shown when user is not login
-	echo "<table width=100% border=0>";
-	echo "<tr>";
-		echo "<td><H1>$server</H1></td>";
-		echo "<td align='right'>";
+	echo "<table width=100% border=0>\n";
+	echo "<tr>\n";
+		echo "<td><H1>$server</H1></td>\n";
+		echo "<td align='right'>\n";
 			echo "<form action='index.php' method='post'>";
 			echo "Enter Your Name: <br>";
 			echo "<input type='text' id='username' name ='username' size=20><br>";
 			echo "<input type='submit' value='login'/>";
-			echo "</form>";
-		echo "</td>";
-	echo "</tr>";
-	echo "</table>";
-	echo "<HR>";
+			echo "</form>\n";
+		echo "</td>\n";
+	echo "</tr>\n";
+	echo "</table>\n";
+	echo "<HR>\n";
 }
 
 // Get the most recent N images
 if ($enable_cache)
 {
 	// Attemp to get the cached records for the front page
-	$mem = open_memcache_connection($cache_server);
-	$images = $mem->get("front_page");
-	if (!$images)
+	$images_html = $cache->get($cache_key);
+	if (!$images_html)
 	{
 		// If there is no such cached record, get it from the database
-		$images = retrieve_recent_uploads($db, 10);
-		// Then put the record into cache
-		$mem->set("front_page", $images, time()+86400);
+		$images = retrieve_recent_uploads($db, 10, $storage_option);
+		// Convert the records into HTML
+		$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl);
+		// Then put the HTML into cache
+		$cache->set($cache_key, $images_html);
 	}
 }
 else
 {
 	// This statement get the last 10 records from the database
-	$images = retrieve_recent_uploads($db, 10);
+	$images = retrieve_recent_uploads($db, 10, $storage_option);
+	$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl);
 }
-
 // Display the images
-echo "<br>&nbsp;<br>";
-if ($storage_option == "hd")
-{
-	// Images are on hard disk
-	foreach ($images as $image)
-	{
-		$filename = $image["filename"];
-		$url = "uploads/".$filename;
-		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
-	}
-}
-else if ($storage_option == "s3")
-{
-	// Images are on S3
-	foreach ($images as $image)
-	{
-		$filename = $image["filename"];
-		$url = $s3_baseurl.$s3_bucket."/".$filename;
-		echo "<img src='$url' width=200px height=150px>&nbsp;&nbsp;";
-	}
-}
+echo $images_html;
+
 $session_id = session_id();
 echo "<hr>";
 echo "Session ID: ".$session_id;
-echo "</body>";
-echo "</html>";
+echo "\n</body>";
+echo "\n</html>";
 ?>
