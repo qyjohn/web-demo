@@ -65,7 +65,6 @@ if (isset($_FILES["fileToUpload"]) && isset($_SESSION['username']))
 	}
 }
 
-
 function process_login($username)
 {
 	// Simply write username to session data
@@ -134,9 +133,6 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket, $s3_prefix)
 	return $key;
 }
 
-
-
-
 function add_upload_info($db, $username, $filename)
 {
 	// Add a new record to the upload_images table
@@ -193,9 +189,6 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_ba
 	}
 	return $html;	
 }
-
-
-
 ?>
 
 <?php
