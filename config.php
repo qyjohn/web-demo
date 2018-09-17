@@ -13,7 +13,7 @@ $db_password = "password";
 $db = open_db_connection($db_hostname, $db_database, $db_username, $db_password);
 
 // Image upload options
-$storage_option = "s3";	// hd or s3
+$storage_option = "hd";	// hd or s3
 $hd_folder  = "uploads";
 $s3_region  = "us-east-2";
 $s3_bucket  = "your_s3_bucket_name";
