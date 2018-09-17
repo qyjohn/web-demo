@@ -19,6 +19,8 @@ $s3_region  = "us-east-2";
 $s3_bucket  = "your_s3_bucket_name";
 $s3_prefix  = "uploads";
 $s3_baseurl = "https://s3-us-east-2.amazonaws.com/";
+$enable_cf  = true;
+$cf_baseurl = "http://d12yalsbebfqdy.cloudfront.net/";
 if ($storage_option == "s3")
 {
 	$s3_client = S3Client::factory(array('region' => $s3_region, 'version' => 'latest'));
