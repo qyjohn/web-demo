@@ -62,16 +62,7 @@ function open_memcache_connection()
 function open_redis_connection()
 {
 	$parameters = [
-    'tcp://web-demo.xxxxxx.clustercfg.use2.cache.amazonaws.com:6379',    // configuration endpoint
-    'tcp://web-demo-0001-001.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 1 node 1
-    'tcp://web-demo-0001-002.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 1 node 2
-    'tcp://web-demo-0001-003.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 1 node 3
-    'tcp://web-demo-0002-001.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 2 node 1
-    'tcp://web-demo-0002-002.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 2 node 2
-    'tcp://web-demo-0002-003.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 2 node 3
-    'tcp://web-demo-0003-001.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 3 node 1
-    'tcp://web-demo-0003-002.xxxxxx.0001.use2.cache.amazonaws.com:6379', // shard 3 node 2
-    'tcp://web-demo-0003-003.xxxxxx.0001.use2.cache.amazonaws.com:6379'  // shard 3 node 3
+    'tcp://web-demo.xxxxxx.clustercfg.use2.cache.amazonaws.com:6379'    // configuration endpoint
 	];
 	$options = [
     	'cluster' => 'redis'
