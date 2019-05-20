@@ -30,7 +30,7 @@ if ($storage_option == "s3")
 $latency = 0;
 
 // Cache configuration
-$enable_cache = true;
+$enable_cache = false;
 $cache_type = "memcached";	// memcached or redis
 $cache_key  = "images_html";
 if ($enable_cache && ($cache_type == "memcached"))

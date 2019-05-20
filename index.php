@@ -28,6 +28,9 @@ if (isset($_FILES["fileToUpload"]) && isset($_SESSION['username']))
 {
 	// Check file type before processing
 	$file_temp = "/tmp/".basename($_FILES["fileToUpload"]["name"]);
+	$file_size = $_FILES["fileToUpload"]["size"];
+	error_log("Handling $file_temp with $file_size bytes");
+
 	$file_type = strtolower(pathinfo($file_temp, PATHINFO_EXTENSION));
 	if(($file_type != "jpg") && ($file_type != "png") && ($file_type != "jpeg") && ($file_type != "gif") ) 
 	{
@@ -145,6 +148,7 @@ function retrieve_recent_uploads($db, $count)
 {
 	// Print a message so that the user knows these records come from the DB.
 	echo "Getting latest $count records from database.<br>";
+        error_log("Getting latest $count records from database.");
 
 	// Geting the latest records from the upload_images table
 	$sql = "SELECT * FROM upload_images ORDER BY timeline DESC LIMIT $count";
