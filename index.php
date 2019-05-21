@@ -127,6 +127,7 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket, $s3_prefix)
 			'SourceFile' => $uploadedFile["tmp_name"],
 			'ACL'    => 'public-read'
 	    ));
+		error_log("Uploaded to S3 as s3://$s3_bucket/$key.");
 	} catch (S3Exception $e) 
 	{
 		echo "There was an error uploading the file.\n";
