@@ -5,6 +5,8 @@ use Aws\S3\S3Client;
 require "predis/autoload.php";
 Predis\Autoloader::register();
 
+$instance_id = file_get_contents("http://instance-data/latest/meta-data/instance-id");
+
 // Database connection parameters
 $db_hostname = "localhost";
 $db_database = "web_demo";
