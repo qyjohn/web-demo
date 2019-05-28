@@ -29,7 +29,7 @@ if (isset($_FILES["fileToUpload"]) && isset($_SESSION['username']))
 	// Check file type before processing
 	$file_temp = "/tmp/".basename($_FILES["fileToUpload"]["name"]);
 	$file_size = $_FILES["fileToUpload"]["size"];
-	error_log("$instance_id: Handling $file_temp with $file_size bytes");
+	error_log("Handling $file_temp with $file_size bytes");
 
 	$file_type = strtolower(pathinfo($file_temp, PATHINFO_EXTENSION));
 	if(($file_type != "jpg") && ($file_type != "png") && ($file_type != "jpeg") && ($file_type != "gif") ) 
@@ -130,7 +130,7 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket, $s3_prefix)
 		error_log("Uploaded to S3 as s3://$s3_bucket/$key.");
 	} catch (S3Exception $e) 
 	{
-		echo "$instance_id: There was an error uploading the file.\n";
+		echo "There was an error uploading the file to S3.\n";
 		return false;
 	}	
 
@@ -254,7 +254,7 @@ else
 // Get the most recent N images
 if ($enable_cache)
 {
-	error_log("$instance_id: Cache enabled, try to obtain the cached version.");
+	error_log("Cache enabled, try to obtain the cached version.");
 	// Attemp to get the cached records for the front page
 	$images_html = $cache->get($cache_key);
 	if (!$images_html)
