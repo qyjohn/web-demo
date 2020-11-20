@@ -188,7 +188,7 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_ba
         	foreach ($images as $image)
         	{
                 	$filename = $image["filename"];
-	                $url = $s3_baseurl.$s3_prefix."/".$filename;	                	
+	                $url = $s3_baseurl."/".$filename;	                	
                 	$html = $html. "<img src='$url' width=200px height=150px>\n";
         	}
 	}
