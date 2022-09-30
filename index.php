@@ -163,7 +163,7 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bu
 	$html = "\n";
 	if ($enable_cf == true)
 	{
-	        // Images are on hard disk
+	        // Images can be either on S3 or HD
         	foreach ($images as $image)
         	{
                 	$filename = $image["filename"];
@@ -191,7 +191,7 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bu
 			//Create S3 presigned URL
 			$cmd = $s3_client->getCommand('GetObject',
 				['Bucket' => $s3_bucket, 'Key' => $filename]);
-			$req = $s3_client->createPresignedRequest($cmd, '+60 minutes');
+			$req = $s3_client->createPresignedRequest($cmd, '+600 minutes');
 	                $url = (string) $req->getUri();
                 	$html = $html. "<img src='$url' width=200px height=150px>\n";
         	}
