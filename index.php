@@ -124,9 +124,8 @@ function save_upload_to_s3($s3_client, $uploadedFile, $s3_bucket, $s3_prefix)
 		$s3_client->putObject(array(
 			'Bucket' => $s3_bucket,
 			'Key'    => $key,
-			'SourceFile' => $uploadedFile["tmp_name"],
-			'ACL'    => 'public-read'
-	    ));
+			'SourceFile' => $uploadedFile["tmp_name"]
+  	        ));
 		error_log("Uploaded to S3 as s3://$s3_bucket/$key.");
 	} catch (S3Exception $e) 
 	{
@@ -159,7 +158,7 @@ function retrieve_recent_uploads($db, $count)
 	return $images;
 }
 
-function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl)
+function db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl)
 {
 	$html = "\n";
 	if ($enable_cf == true)
@@ -171,7 +170,7 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_ba
                 	$url = $cf_baseurl.$filename;
                	 	$html = $html."<img src='$url' width=200px height=150px>\n";
         	}
-	}	
+	}
 	else if ($storage_option == "hd")
 	{
 	        // Images are on hard disk
@@ -188,11 +187,16 @@ function db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_ba
         	foreach ($images as $image)
         	{
                 	$filename = $image["filename"];
-	                $url = $s3_baseurl.$filename;	                	
+
+			//Create S3 presigned URL
+			$cmd = $s3_client->getCommand('GetObject',
+				['Bucket' => $s3_bucket, 'Key' => $filename]);
+			$req = $s3_client->createPresignedRequest($cmd, '+60 minutes');
+	                $url = (string) $req->getUri();
                 	$html = $html. "<img src='$url' width=200px height=150px>\n";
         	}
 	}
-	return $html;	
+	return $html;
 }
 ?>
 
@@ -262,7 +266,7 @@ if ($enable_cache)
 		// If there is no such cached record, get it from the database
 		$images = retrieve_recent_uploads($db, 10, $storage_option);
 		// Convert the records into HTML
-		$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
+		$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
 		// Then put the HTML into cache
 		$cache->set($cache_key, $images_html);
 	}
@@ -271,7 +275,7 @@ else
 {
 	// This statement get the last 10 records from the database
 	$images = retrieve_recent_uploads($db, 10, $storage_option);
-	$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
+	$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
 }
 // Display the images
 echo $images_html;
