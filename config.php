@@ -1,6 +1,6 @@
 <?php
 // Include the AWS SDK for PHP
-require 'aws-sdk-for-php/aws-autoloader.php';
+require 'aws.phar';
 use Aws\S3\S3Client;
 require "predis/autoload.php";
 Predis\Autoloader::register();
