@@ -20,7 +20,7 @@ $hd_folder  = "uploads";
 $s3_region  = "us-east-2";
 $s3_bucket  = "your_s3_bucket_name";
 $s3_prefix  = "uploads";
-$s3_baseurl = "https://bucket-name.s3-region-name.amazonaws.com/";
+$s3_client  = null;
 $enable_cf  = false;
 $cf_baseurl = "http://xxxxxxxxxxxxxx.cloudfront.net/";
 if ($storage_option == "s3")
