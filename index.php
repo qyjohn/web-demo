@@ -158,7 +158,7 @@ function retrieve_recent_uploads($db, $count)
 	return $images;
 }
 
-function db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl)
+function db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $enable_cf, $cf_baseurl)
 {
 	$html = "\n";
 	if ($enable_cf == true)
@@ -266,7 +266,7 @@ if ($enable_cache)
 		// If there is no such cached record, get it from the database
 		$images = retrieve_recent_uploads($db, 10, $storage_option);
 		// Convert the records into HTML
-		$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
+		$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $enable_cf, $cf_baseurl);
 		// Then put the HTML into cache
 		$cache->set($cache_key, $images_html);
 	}
@@ -275,7 +275,7 @@ else
 {
 	// This statement get the last 10 records from the database
 	$images = retrieve_recent_uploads($db, 10, $storage_option);
-	$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $s3_baseurl, $enable_cf, $cf_baseurl);
+	$images_html = db_rows_2_html($images, $storage_option, $hd_folder, $s3_client, $s3_bucket, $enable_cf, $cf_baseurl);
 }
 // Display the images
 echo $images_html;
